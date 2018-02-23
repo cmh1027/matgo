@@ -39,7 +39,7 @@ class Field(Deck):
             for p in self.__field:
                 if len(p)==0:
                     p.append(card)
-                    return
+                    return (p, len(self.__field[p])) # (pos, 1)
         else:
             for p in self.__field:
                 if len(p) == 0:

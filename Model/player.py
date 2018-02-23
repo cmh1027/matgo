@@ -1,5 +1,5 @@
 class Player:
-    def __init__(self):
+    def __init__(self, user):
         self.__hand = [];
         self.__gwang = [];
         self.__animal = [];
@@ -8,16 +8,7 @@ class Player:
         self.__shake = 0;
         self.__fuck = 0;
         self.__go = 0;
-    
-    def init(self):
-        self.__hand = [];
-        self.__gwang = [];
-        self.__animal = [];
-        self.__dan = [];
-        self.__pee = [];
-        self.__shake = 0;
-        self.__fuck = 0;
-        self.__go = 0;
+        self.__user = user
 
     @property
     def hand(self):
@@ -43,6 +34,9 @@ class Player:
     @property
     def go(self):
         return self.__go
+    @property
+    def money(self):
+        return self.__money
     
     def add_shake(self):
         self.__shake+=1
