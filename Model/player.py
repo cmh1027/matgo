@@ -1,5 +1,5 @@
 class Player:
-    def __init__(self, user):
+    def __init__(self):
         self.__hand = [];
         self.__gwang = [];
         self.__animal = [];
@@ -8,7 +8,6 @@ class Player:
         self.__shake = 0;
         self.__fuck = 0;
         self.__go = 0;
-        self.__user = user
 
     @property
     def hand(self):

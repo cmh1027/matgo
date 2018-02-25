@@ -1,26 +1,25 @@
 import random
 import os
-
+from PyQt4.QtGui import *
 imagePath = os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))), "view\img_matgo\cards")
-class Card: 
+class Card(): 
     prop = ("gwang", "animal", "dan", "pee", "dual", "bomb")
     special = (None, "bee", "red", "blue", "cho", "godori", "double")
     month = (1,2,3,4,5,6,7,8,9,10,11,12)
 
-    def __init__(self, prop, special, month, isfront, number=0):
+    def __init__(self, prop, special, month, isfront, number = 0):
+        super().__init__()
         self.__prop = prop
         self.__special = special
         self.__month = month
         self.__isfront = isfront
         self.__number = number # for 2 pees
-        self.__image = None
     def __str__(self):
         return self.__prop + "/" + str(self.__month)
 
     def flip(self):
         self.__isfront = not self.__isfront
-    def setImage(self, name):
-        pass
+
     @property
     def prop(self):
         return self.__prop
@@ -30,9 +29,6 @@ class Card:
     @property
     def month(self):
         return self.__month
-    @property
-    def image(self):
-        return self.__image
     @property
     def isfront(self):
         return self.__isfront
@@ -82,9 +78,7 @@ class Card:
             deck.append(Card("pee", None, month, False, 1))
             deck.append(Card("pee", None, month, False, 2))
         # dual
-        deck.append(Card("dual", None, 9, False))      
-        for card in deck:
-            card.setImage(card.imageName)
+        deck.append(Card("dual", None, 9, False))
         random.shuffle(deck)
         return deck
 

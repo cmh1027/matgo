@@ -1,5 +1,5 @@
-def askforReplay(screen):
+def askforReplay(window):
     print("hello")
 
-def cardMove(screen, images, x, y, time):
+def cardMove(window, images, x, y, time):
     print("hello")
