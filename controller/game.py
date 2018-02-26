@@ -4,43 +4,44 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__f
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))), "view"))
 import field
 import player
-from card_animation import *
+import time
+import GUIhandler as gui
 from PyQt4.QtGui import *
-class CardLabel(QLabel):
-    def __init__(self, window, card):
-        super().__init__(window)
-        if card is Card:
-            card_image = QPixmap(os.path.join(os.getcwd(), "view\img_matgo\cards\\"+card.imageName))
-        else:
-            card_image = QPixmap(os.path.join(os.getcwd(), "view\img_matgo\cards\\"+card))
-        self.setPixmap(card_image)
-        self.resize(card_image.size().width(), card_image.size().height())
-
-class Profile(QLabel):
-    def __init__(self, window, image, x, y):
-        super().__init__(window)
-        profile_image = QPixmap(os.path.join(os.getcwd(), "view\img_matgo\\"+image))
-        self.setPixmap(profile_image)
-        self.resize(profile_image.size().width(), profile_image.size().height())
-        self.move(x, y)
+from PyQt4 import QtTest
+import PyQt4.QtCore as QtCore
+soundPath = os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))), "view\sound")
 
 class Game:
     def __init__(self, window):
-        self.player1 = player.Player()
-        self.player2 = player.Player()
-        self.field = field.Field()
-        self.card = {"tail" : CardLabel(window, "tail.png"), "bomb" : CardLabel(window, "bomb.png")}
-        for card in self.field.Deck:
-            self.card[card] = CardLabel(window, card)
-        Profile(window, "gony.png", 377, 369).show()
-        Profile(window, "monkfish.png", 377, 1).show()
+        self.player1 = player.Player(isEnemy=False)
+        self.player2 = player.Player(isEnemy=True)
+        self.field = field.Field(window)
+        self.endgame = False
+        self.whoop = QSound(os.path.join(soundPath, "whoop.wav"))
+        self.whip = QSound(os.path.join(soundPath, "whip.wav"))
+        self.start = QSound(os.path.join(soundPath, "start.wav"))
     def ready(self):
-        pass
-        
+        QtTest.QTest.qWait(300)
+        for _ in range(2):
+            self.whoop.play()
+            self.field.putcard(self.field.deckpop(count=4), False)
+            QtTest.QTest.qWait(500)
+            self.whoop.play()
+            self.player1.gethand(self.field.deckpop(count=5))
+            QtTest.QTest.qWait(300)
+            self.whoop.play()
+            self.player2.gethand(self.field.deckpop(count=5))
+            QtTest.QTest.qWait(500)
+        self.field.arrange()
+        self.player1.arrange()
+        self.player2.arrange()
+        self.start.play()
+        QtTest.QTest.qWait(300)
     def start(self):
         pass
 
 def init(window):
     for components in window.findChildren(QPushButton): # remove Start / Exit Buttons
-        components.deleteLater()
+        components.setParent(None)
     controller = Game(window)
+    controller.ready()

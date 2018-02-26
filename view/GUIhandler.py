@@ -4,6 +4,13 @@ import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))), "controller"))
 import game
+class Image(QLabel):
+    def __init__(self, window, image, x, y):
+        super().__init__(window)
+        image_file = QPixmap(os.path.join(os.getcwd(), "view\img_matgo\\"+image))
+        self.setPixmap(image_file)
+        self.resize(image_file.size().width(), image_file.size().height())
+        self.move(x, y)
 class MainMenuButton(QPushButton):
     def __init__(self, string):
         super().__init__(string)
@@ -11,16 +18,18 @@ class MainMenuButton(QPushButton):
         self.setFont(QFont("Times", 15, QFont.Bold))
         self.setStyleSheet("background-color: white")
         self.show()
+
 def mainScreen(window):
     for components in window.findChildren(QWidget):
         components.deleteLater()
     window.setStyleSheet("background-color: yellow")
     menus = QVBoxLayout()
-    menus.setContentsMargins(250, 20, 250, 60) 
+    menus.setContentsMargins(250, 20, 250, 60)
     title = QLabel("MATGO")
     title.setFont(QFont("Times", 35, QFont.Bold))
     title.setStyleSheet("color: blue")
     title.setFixedHeight(110)
+    title.setFixedWidth(200)
     menus.addWidget(title)
     singleButton = MainMenuButton("vs Computer")
     menus.addWidget(singleButton)
@@ -39,11 +48,9 @@ def singleGameScreen(window):
     QWidget().setLayout(window.layout())
     for components in window.findChildren(QWidget):
         components.deleteLater()
-    background = QLabel(window)
-    background_image = QPixmap(os.path.join(os.getcwd(), "view\img_matgo\Field.png"))
-    background.setPixmap(background_image)
-    background.resize(background_image.size().width(), background_image.size().height())
-    background.show()
+    Image(window, "Field.png", 0, 0).show()
+    Image(window, "gony.png", 376, 369).show()
+    Image(window, "monkfish.png", 376, 1).show()
     startButton = QPushButton("시작", window)
     startButton.move(80, 210)
     startButton.setFont(QFont("Times", 15, QFont.Bold))
