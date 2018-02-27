@@ -85,6 +85,21 @@ class Field(Deck):
                     return True
         return False
 
+    def pop(self, slot, pos=None):
+        if type(pos) is int:
+            return [self.__field[slot].pop(pos)]
+        else if type(pos) is list:
+            li = []
+            while pos != []:
+                li.append(self.__field[slot].pop(max(pos)))
+                pos.remove(max(pos))
+            return li
+        else:
+            li = []
+            li.extend(self.__field[slot])
+            self.__field[slot].clear()
+            return li
+
     def put(self, card, arrange=True): # arrange is false only when initially cards are distributed
         if type(card) is list:
             for c in card:

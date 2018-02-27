@@ -23,6 +23,7 @@ class Card(CardLabel):
         self.__special = special
         self.__month = month
         self.__number = number # for 2 pees
+        self.__fliped = False
     def __str__(self):
         return self.__prop + "/" + str(self.__month)
     
@@ -32,7 +33,9 @@ class Card(CardLabel):
         else:
             self.__prop = "pee"
             self.__special = "double"
-
+    @property
+    def fliped(self):
+        return self.__fliped
     @property
     def prop(self):
         return self.__prop
@@ -54,3 +57,4 @@ class Card(CardLabel):
     
     def flip(self):
         self.setPixmap(QPixmap(os.path.join(os.getcwd(), "view\img_matgo\cards\\"+self.imageName)))
+        self.__fliped = True

@@ -148,8 +148,8 @@ class Player:
     
     def getCard(self, cards):
         if type(cards) is list:
-            for card in cards:
-                self.getCard(card)
+            while cards != []
+                self.getCard(cards.pop())
         else:
             if cards.prop == "gwang":
                 self.__gwang.append(cards)
@@ -159,7 +159,7 @@ class Player:
                 self.__dan.append(cards)
             else:
                 self.__pee.append(cards)
-            GameGUI.toplayer(cards)
+            GameGUI.toplayer(cards, self)
     
     def rob(self, count):
         pass

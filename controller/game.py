@@ -45,7 +45,8 @@ class Game:
 
     def turn(self, myturn):
         if myturn:
-            GameGUI.attachEventHand(self, self.player1, self.field)
+            slot = GameGUI.attachEventHand(self.player1, self.field)
+            self.select(self.player1, slot)
         else: # computer
             self.logic(self.player2, random.randrange(len(self.player2.hand)))
 
@@ -82,32 +83,53 @@ class Game:
         # self.process(player, firstput, secondput, bomb)
 
     def process(self, player, firstput, secondput, bomb):
-        rob+=1
+        rob = 0
+        getcards = []
         if firstput["slot"] == secondput["slot"]:
             if secondput["pos"] == 2: # Kiss
-                rob = rob + 1
+                rob+=1
+                getcards.extend(self.field.pop(firstput["slot"]))
             if secondput["pos"] == 3: # Fuck
                 player.addfuck()
                 player.addfuckmonth(self.__field.current[firstput["slot"]][0].month)
             else: # Tadack
                 rob+=1
+                getcards.extend(self.field.pop(firstput["slot"]))
         else:
             if firstput["pos"] == 4:
                 if bomb:
                     rob+=1 # Bomb
+                    getcards.extend(self.field.pop(firstput["slot"]))
                 else:
                     rob+=1 # Get fuck
                     if self.__field.current[firstput["slot"]][0].month in player.fuckmonth: # Jafuck
                         rob += 1
-            if firstput["pos"] == 3:
-                self.chooseCard(player, self.__field.current[firstput["slot"][0:2])
+                        getcards.extend(self.field.pop(firstput["slot"]))
+            else if firstput["pos"] == 3:
+                select = self.chooseCard(player, self.__field.current[firstput["slot"]][0:2])
+                getcards.extend(self.field.pop(firstput["slot"], [select, 2]))
+            else if firstput["pos"] == 2:
+                getcards.extend(self.field.pop(firstput["slot"]))
+            
             if secondput["pos"] == 4: # Get fuck
                 rob+=1
                 if self.__field.current[secondput["slot"]][0].month in player.fuckmonth: # Jafuck
                     rob += 1
-            if secondput["pos"] == 3:
-                self.chooseCard(player, self.__field.current[secondput["slot"][0:2])
-        
+                getcards.extend(self.field.pop(secondput["slot"]))
+                
+            else if secondput["pos"] == 3:
+                select = self.chooseCard(player, self.__field.current[secondput["slot"]][0:2])
+                getcards.extend(self.field.pop(secondput["slot"], [select, 2]))
+            else if secondput["pos"] == 2:
+                getcards.extend(self.field.pop(firstput["slot"]))
+        player.getCard(getcards)
+        QtTest.QTest.qWait(700)
+        if player.isEnemy:
+            getcards.extend(self.player1.rob(rob))
+        else:
+            getcards.extend(self.player2.rob(rob))
+        player.getCard(getcards)
+        QtTest.QTest.qWait(1000)
         if(bomb):
             player.gethandbombs()
         self.myturn = not self.myturn

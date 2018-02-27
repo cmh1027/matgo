@@ -4,16 +4,17 @@ import os
 soundPath = os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))), "view\sound")
 
 def tohand(card, slot, player, arrange=False):
-    card.flip()
     if player.isEnemy:
         card.move(476+(slot%5)*40, 5+68*(slot//5))
     else:
+        card.flip()
         card.move(476+(slot%5)*40, 326+68*(slot//5))
     if not arrange:
         QSound(os.path.join(soundPath, "whoop.wav")).play()
 
 def tofield(card, slot, pos, arrange=False):
-    card.flip()
+    if not card.fliped:
+        card.flip()
     card.move(10+slot//2*55+5*pos+20*(slot%2), 150+85*(slot%2)+5*pos)
     if pos==0:
         if not arrange:
@@ -58,19 +59,25 @@ def topee(card, player):
     else:
         card.move(5+(len(player.pee)-1)*7, 323)
 
-def attachEventHand(game, player, field):
+def attachEventHand(player, field):
+    selected = None
     def select(slot):
+        global selected
+        selected = slot
         removeEventHand(player)
-        game.select(player, slot)
     for i in range(len(player.hand)):
         player.hand[i].mousePressEvent = lambda state, slot=i: select(slot)
+    while selected == None:
+        qApp.processEvents()
+    return selected
+    
 
 def removeEventHand(player):
     for i in range(len(player.hand)):
         player.hand[i].mousePressEvent = None
 
 
-def chongtong(cards):
+def chongtong(cards1, cards2):
     pass
 
 def shake(cards):
