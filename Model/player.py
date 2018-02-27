@@ -1,18 +1,20 @@
-import card_animation as Animation
+import GUI_game as GameGUI
+from card import *
 class Player:
-    def __init__(self, isEnemy=None):
+    def __init__(self, window, isEnemy=None):
+        self.window = window
         self.__hand = [];
         self.__gwang = [];
         self.__animal = [];
         self.__dan = [];
         self.__pee = [];
+        self.__score = 0
         self.__shake = 0;
         self.__fuck = 0;
         self.__go = 0;
         self.__isEnemy = isEnemy
-    
-    def getCard(self, card):
-        self.__hand.append(card)
+        self.__fuckmonth = []
+
     @property
     def hand(self):
         return self.__hand
@@ -32,6 +34,9 @@ class Player:
     def shake(self):
         return self.__shake
     @property
+    def score(self):
+        return self.__score
+    @property
     def fuck(self):
         return self.__fuck
     @property
@@ -40,13 +45,21 @@ class Player:
     @property
     def money(self):
         return self.__money
+    @property
+    def isEnemy(self):
+        return self.__isEnemy
+    @property
+    def fuckmonth(self):
+        return self.__fuckmonth
     
-    def add_shake(self):
+    def addshake(self):
         self.__shake+=1
-    def add_fuck(self):
+    def addfuck(self):
         self.__fuck+=1
-    def add_go(self):
+    def addgo(self):
         self.__go+=1
+    def addfuckmonth(self, month):
+        self.__fuckmonth.append(month)
     
     def isChongtong(self):
         for i in range(1, 13):
@@ -54,10 +67,20 @@ class Player:
             if len(li) == 4:
                 return li
         return False
+    
+    def haveFourCards(self):
+        for month in range(1, 13):
+            li = list(filter(lambda c : c.month == month, self.__hand))
+            if len(li) == 4:
+                return li
+        return False
 
     def haveThreeCards(self, card):
-        li = list(filter(lambda c : c.month == card.month, self.__hand))
-        if len(li) >= 3:
+        li = []
+        for i in range(len(self.__hand)):
+            if card.month == self.__hand[i]:
+                li.append(i)
+        if len(li) == 3:
             return li
         else:
             return False
@@ -99,20 +122,31 @@ class Player:
     def haveCard(self, card):
         return card in self.__hand or card in self.__gwang or card in self.__animal or card in self.__dan or card in self.__pee
 
-    def gethand(self, cards):
+    def gethand(self, cards, recur=False):
         if type(cards) is list:
             for card in cards:
                 self.gethand(card)
         else:
             self.__hand.append(cards)
-            Animation.tohand(cards, len(self.__hand)-1, self.__isEnemy)
+            GameGUI.tohand(cards, len(self.__hand)-1, self)
+
+    def gethandbombs(self):
+        self.gethand([Card(self.window, "bomb"), Card(self.window, "bomb")])
+
+    def put(self, slot):
+        selected = self.__hand.pop(slot)
+        self.arrange()
+        return selected
+    
+    def at(self, slot):
+        return self.__hand[slot]
 
     def arrange(self):
         self.__hand.sort(key=lambda card:card.month)
         for slot in range(len(self.__hand)):
-            Animation.tohand(self.__hand[slot], slot, self.__isEnemy)
+            GameGUI.tohand(self.__hand[slot], slot, self, True)
     
-    def getCard(self, cards, dual=None):
+    def getCard(self, cards):
         if type(cards) is list:
             for card in cards:
                 self.getCard(card)
@@ -123,13 +157,9 @@ class Player:
                 self.__animal.append(cards)
             elif cards.prop == "dan":
                 self.__dan.append(cards)
-            elif cards.prop == "pee":
+            else:
                 self.__pee.append(cards)
-            else: # dual
-                if dual=="animal" :
-                    self.__animal.append(cards)
-                elif dual=="pee":
-                    self.__pee.append(cards)
-                else:
-                    self.__pee.append(cards)
-                    print("Warning : dual flag is not set")
+            GameGUI.toplayer(cards)
+    
+    def rob(self, count):
+        pass

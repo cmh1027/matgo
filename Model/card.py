@@ -15,9 +15,9 @@ class CardLabel(QLabel):
 class Card(CardLabel): 
     prop = ("gwang", "animal", "dan", "pee", "dual", "bomb")
     special = (None, "bee", "red", "blue", "cho", "godori", "double")
-    month = (1,2,3,4,5,6,7,8,9,10,11,12)
+    month = (1,2,3,4,5,6,7,8,9,10,11,12,13) # 13 is for bomb
 
-    def __init__(self, window, prop, special, month, number = 0):
+    def __init__(self, window, prop, month = 13, special = None, number = 0):
         super().__init__(window)
         self.__prop = prop
         self.__special = special
@@ -25,6 +25,13 @@ class Card(CardLabel):
         self.__number = number # for 2 pees
     def __str__(self):
         return self.__prop + "/" + str(self.__month)
+    
+    def propchange(self, prop): # for dual
+        if prop == "animal":
+            self.__prop = "animal"
+        else:
+            self.__prop = "pee"
+            self.__special = "double"
 
     @property
     def prop(self):
