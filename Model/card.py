@@ -2,15 +2,8 @@ import random
 import os
 from PyQt4.QtGui import *
 imagePath = os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))), "view\img_matgo\cards")
-
-class CardLabel(QLabel):
-    def __init__(self, window):
-        super().__init__(window)
-        card_image = QPixmap(os.path.join(os.getcwd(), "view\img_matgo\cards\\tail.png"))
-        self.setPixmap(card_image)
-        self.resize(card_image.size().width(), card_image.size().height())
-        self.move(350, 200)
-        self.show()
+soundPath = os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))), "view")
+from GUI_game import CardLabel
 
 class Card(CardLabel): 
     prop = ("gwang", "animal", "dan", "pee", "dual", "bomb")
@@ -47,6 +40,8 @@ class Card(CardLabel):
         return self.__month
     @property
     def imageName(self):
+        if self.__prop == "bomb":
+            return "bomb.png"
         if self.__special:
             return str(self.__month) + "_" + self.__special + ".png"
         else:

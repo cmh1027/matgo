@@ -88,11 +88,13 @@ class Field(Deck):
     def pop(self, slot, pos=None):
         if type(pos) is int:
             return [self.__field[slot].pop(pos)]
-        else if type(pos) is list:
+        elif type(pos) is list:
             li = []
             while pos != []:
                 li.append(self.__field[slot].pop(max(pos)))
                 pos.remove(max(pos))
+            for i in range(len(self.__field[slot])):
+                GameGUI.tofield(self.__field[slot][i], slot, i)
             return li
         else:
             li = []
@@ -125,7 +127,6 @@ class Field(Deck):
                     if len(self.__field[p]) == 0:
                         self.__field[p].append(card)
                         GameGUI.tofield(card, p, len(self.__field[p])-1)
-                        self.arrange(p)
                         return {"slot":p, "pos":len(self.__field[p])}
 
     def arrange(self, slot=None): # Add chongtong case later on
@@ -134,7 +135,7 @@ class Field(Deck):
                 self.__field[slot][pos].raise_()
         else:
             for i in range(11, 0, -1):
-                for p in range(i-1):
+                for p in range(i):
                     if len(self.__field[p])!=0 and len(self.__field[i])!=0:
                         if self.__field[p][0].month == self.__field[i][0].month:
                             for _ in range(len(self.__field[i])):

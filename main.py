@@ -11,6 +11,10 @@ class Window(QWidget):
         self.setWindowTitle("MATGO")
         self.setWindowIcon(QIcon('icon.ico'))
         self.show()
+    def closeEvent(self, event):
+        event.accept()
+        self.deleteLater()
+        sys.exit(0)
         
 if __name__ == "__main__":
     app = QApplication([])
