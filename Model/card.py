@@ -10,8 +10,8 @@ class Card(CardLabel):
     special = (None, "bee", "red", "blue", "cho", "godori", "double")
     month = (1,2,3,4,5,6,7,8,9,10,11,12,13) # 13 is for bomb
 
-    def __init__(self, window, prop, month = 13, special = None, number = 0):
-        super().__init__(window)
+    def __init__(self, prop, month = 13, special = None, number = 0):
+        super().__init__()
         self.__prop = prop
         self.__special = special
         self.__month = month

@@ -45,7 +45,7 @@ def mainScreen(window):
     window.setLayout(menus)
 
 
-def singleGameScreen(window):
+def singleGameScreen(window, winner=None):
     if window.layout():
         QWidget().setLayout(window.layout())
     for components in window.findChildren(QWidget):
@@ -57,7 +57,10 @@ def singleGameScreen(window):
     startButton.move(80, 210)
     startButton.setFont(QFont("Times", 15, QFont.Bold))
     startButton.setStyleSheet("background-color: white;color: red")
-    startButton.clicked.connect(lambda state, win=window: game.init(win))
+    if winner==None:
+        startButton.clicked.connect(lambda state, window=window: game.init(window))
+    else:
+        startButton.clicked.connect(lambda state, window=window, winner=winner: game.init(window, winner))
     startButton.show()
     exitButton = QPushButton("나가기", window)
     exitButton.move(230, 210)

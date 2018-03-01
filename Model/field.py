@@ -1,7 +1,7 @@
 from card import *
 class Deck:
-    def __init__(self, window):
-        self._deck = Deck.fresh_deck(window)
+    def __init__(self):
+        self._deck = Deck.fresh_deck(self)
 
     def deckpop(self, count=None):
         if count:
@@ -28,55 +28,61 @@ class Deck:
     def deck(self):
         return self._deck
 
-    @staticmethod
-    def fresh_deck(window):
+    def fresh_deck(self):
         deck = []
         # gwang
-        deck.append(Card(window, "gwang", 1))
-        deck.append(Card(window, "gwang", 3))
-        deck.append(Card(window, "gwang", 8))
-        deck.append(Card(window, "gwang", 11))
-        deck.append(Card(window, "gwang", 12, "bee"))
+        deck.append(Card("gwang", 1))
+        deck.append(Card("gwang", 3))
+        deck.append(Card("gwang", 8))
+        deck.append(Card("gwang", 11))
+        deck.append(Card("gwang", 12, "bee"))
         # dan
-        deck.append(Card(window, "dan", 4, "cho"))
-        deck.append(Card(window, "dan", 5, "cho"))
-        deck.append(Card(window, "dan", 7, "cho"))
-        deck.append(Card(window, "dan", 6, "blue"))
-        deck.append(Card(window, "dan", 9, "blue"))
-        deck.append(Card(window, "dan", 10, "blue"))
-        deck.append(Card(window, "dan", 1, "red"))
-        deck.append(Card(window, "dan", 2, "red"))
-        deck.append(Card(window, "dan", 3, "red"))
-        deck.append(Card(window, "dan", 12))
+        deck.append(Card("dan", 4, "cho"))
+        deck.append(Card("dan", 5, "cho"))
+        deck.append(Card("dan", 7, "cho"))
+        deck.append(Card("dan", 6, "blue"))
+        deck.append(Card("dan", 9, "blue"))
+        deck.append(Card("dan", 10, "blue"))
+        deck.append(Card("dan", 1, "red"))
+        deck.append(Card("dan", 2, "red"))
+        deck.append(Card("dan", 3, "red"))
+        deck.append(Card("dan", 12))
         # animal
-        deck.append(Card(window, "animal", 2, "godori"))
-        deck.append(Card(window, "animal", 4, "godori"))
-        deck.append(Card(window, "animal", 8, "godori"))
-        deck.append(Card(window, "animal", 5))
-        deck.append(Card(window, "animal", 6))
-        deck.append(Card(window, "animal", 7))
-        deck.append(Card(window, "animal", 10))
-        deck.append(Card(window, "animal", 12))
+        deck.append(Card("animal", 2, "godori"))
+        deck.append(Card("animal", 4, "godori"))
+        deck.append(Card("animal", 8, "godori"))
+        deck.append(Card("animal", 5))
+        deck.append(Card("animal", 6))
+        deck.append(Card("animal", 7))
+        deck.append(Card("animal", 10))
+        deck.append(Card("animal", 12))
         # pee
-        deck.append(Card(window, "pee", 11, "double"))
-        deck.append(Card(window, "pee", 12, "double"))
+        deck.append(Card("pee", 11, "double"))
+        deck.append(Card("pee", 12, "double"))
         for month in range(1, 12):
-            deck.append(Card(window, "pee", month, None, 1))
-            deck.append(Card(window, "pee", month, None, 2))
+            deck.append(Card("pee", month, None, 1))
+            deck.append(Card("pee", month, None, 2))
         # dual
-        deck.append(Card(window, "dual", 9))
+        deck.append(Card("dual", 9))
         random.shuffle(deck)
         return deck
 
 class Field(Deck):
-    def __init__(self, window):
-        super().__init__(window)
+    def __init__(self):
+        super().__init__()
         self._field = [[], [], [], [], [], [], [], [], [], [], [], []]
     
     @property
     def current(self):
         return self._field
     
+    def isclear(self):
+        for slot in self._field:
+            if len(slot) > 0:
+                return False
+        else:
+            return True
+
     def exist(self, card):
         for slot in self._field:
             if len(slot) > 0:

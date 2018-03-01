@@ -1,8 +1,7 @@
 from card import *
 
 class Player():
-    def __init__(self, window, isEnemy=None):
-        self.window = window
+    def __init__(self, isEnemy=None):
         self._hand = []
         self._gwang = []
         self._animal = []
@@ -10,11 +9,12 @@ class Player():
         self._pee = []
         self._score = 0
         self._score_go = 0 # Check if the player gets scores
-        self._shake = 0
-        self._fuck = 0
-        self._go = 0
+        self._shakecount = 0
+        self._fuckcount = 0
+        self._gocount = 0
         self._isEnemy = isEnemy
-        self._fuckmonth = []
+        self._fuckcountmonth = []
+        return self
 
     @property
     def hand(self):
@@ -32,8 +32,14 @@ class Player():
     def pee(self):
         return self._pee
     @property
-    def shake(self):
-        return self._shake
+    def singlepee(self):
+        return list(filter(lambda c:c.special==None, self._pee))
+    @property
+    def doublepee(self):
+        return list(filter(lambda c:c.special=="double", self._pee))    
+    @property
+    def shakecount(self):
+        return self._shakecount
     @property
     def score(self):
         return self._score
@@ -41,11 +47,11 @@ class Player():
     def score_go(self):
         return self._score_go
     @property
-    def fuck(self):
-        return self._fuck
+    def fuckcount(self):
+        return self._fuckcount
     @property
-    def go(self):
-        return self._go
+    def gocount(self):
+        return self._gocount
     @property
     def money(self):
         return self._money
@@ -54,23 +60,23 @@ class Player():
         return self._isEnemy
     @property
     def fuckmonth(self):
-        return self._fuckmonth
+        return self._fuckcountmonth
     
     def addshake(self):
-        self._shake+=1
+        self._shakecount+=1
         self.update()
     
     def addfuck(self):
-        self._fuck+=1
+        self._fuckcount+=1
         self.update()
 
     def addgo(self):
-        self._go+=1
+        self._gocount+=1
         self.update()
         self._score_go = self._score
 
     def addfuckmonth(self, month):
-        self._fuckmonth.append(month)
+        self._fuckcountmonth.append(month)
 
     def isChongtong(self):
         for i in range(1, 13):
@@ -135,7 +141,7 @@ class Player():
             self._hand.append(cards)
 
     def gethandbombs(self):
-        self.gethand([Card(self.window, "bomb"), Card(self.window, "bomb")])
+        self.gethand([Card("bomb", 13), Card("bomb", 13)])
 
     def put(self, slot):
         if type(slot) is int: # slot is a number
@@ -171,39 +177,35 @@ class Player():
                 self._pee.append(cards)
     
     def rob(self, count):
-        def one():
-            return list(filter(lambda c:c.special==None, self._pee))
-        def double():
-            return list(filter(lambda c:c.special=="double", self._pee))
         li = []
         while count > 0:
             if count == 1:
-                if len(one()) == 0:
-                    if len(double()) > 0:
-                        li.append(double().pop())
-                        self._pee.remove(double().pop())
+                if len(self.singlepee) == 0:
+                    if len(self.doublepee) > 0:
+                        li.append(self.doublepee.pop())
+                        self._pee.remove(self.doublepee.pop())
                         break
                     else:
                         break
                 else:
-                    li.append(one().pop())
-                    self.pee.remove(one().pop())
+                    li.append(self.singlepee.pop())
+                    self.pee.remove(self.singlepee.pop())
                     break
             else:
-                if len(double()) > 0:
-                    li.append(double().pop())
-                    self._pee.remove(double().pop())
+                if len(self.doublepee) > 0:
+                    li.append(self.doublepee.pop())
+                    self._pee.remove(self.doublepee.pop())
                     count -= 2
                 else:
-                    if len(one()) > 2:
-                        li.append(one().pop())
-                        self.pee.remove(one().pop())
-                        li.append(one().pop())
-                        self.pee.remove(one().pop())
+                    if len(self.singlepee) > 2:
+                        li.append(self.singlepee.pop())
+                        self.pee.remove(self.singlepee.pop())
+                        li.append(self.singlepee.pop())
+                        self.pee.remove(self.singlepee.pop())
                         count -= 2
-                    elif len(one()) == 1:
-                        li.append(one().pop())
-                        self.pee.remove(one().pop())
+                    elif len(self.singlepee) == 1:
+                        li.append(self.singlepee.pop())
+                        self.pee.remove(self.singlepee.pop())
                         break
                     else:
                         break
@@ -237,7 +239,7 @@ class Player():
         double = list(filter(lambda c:c.special=="double", self._pee))
         if len(pee) + 2*len(double) >= 10:
             score += len(pee) + 2*len(double) - 9
-        score += self._go
-        if self._go >= 3:
-            score *= 2**((self._go-2)*(self._go-1)/2)
+        score += self._gocount
+        if self._gocount >= 3:
+            score *= 2**((self._gocount-2)*(self._gocount-1)/2)
         self._score = int(score)
