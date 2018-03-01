@@ -46,7 +46,8 @@ def mainScreen(window):
 
 
 def singleGameScreen(window):
-    QWidget().setLayout(window.layout())
+    if window.layout():
+        QWidget().setLayout(window.layout())
     for components in window.findChildren(QWidget):
         components.deleteLater()
     Image(window, "Field.png", 0, 0).show()

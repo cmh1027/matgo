@@ -1,5 +1,4 @@
 from card import *
-import GUI_game as GameGUI
 class Deck:
     def __init__(self, window):
         self._deck = Deck.fresh_deck(window)
@@ -72,14 +71,14 @@ class Deck:
 class Field(Deck):
     def __init__(self, window):
         super().__init__(window)
-        self.__field = [[], [], [], [], [], [], [], [], [], [], [], []]
+        self._field = [[], [], [], [], [], [], [], [], [], [], [], []]
     
     @property
     def current(self):
-        return self.__field
+        return self._field
     
     def exist(self, card):
-        for slot in self.__field:
+        for slot in self._field:
             if len(slot) > 0:
                 if slot[0].month == card.month:
                     return True
@@ -87,19 +86,17 @@ class Field(Deck):
 
     def pop(self, slot, pos=None):
         if type(pos) is int:
-            return [self.__field[slot].pop(pos)]
+            return self._field[slot].pop(pos)
         elif type(pos) is list:
             li = []
             while pos != []:
-                li.append(self.__field[slot].pop(max(pos)))
+                li.append(self._field[slot].pop(max(pos)))
                 pos.remove(max(pos))
-            for i in range(len(self.__field[slot])):
-                GameGUI.tofield(self.__field[slot][i], slot, i)
             return li
         else:
             li = []
-            li.extend(self.__field[slot])
-            self.__field[slot].clear()
+            li.extend(self._field[slot])
+            self._field[slot].clear()
             return li
 
     def put(self, card, arrange=True): # arrange is false only when initially cards are distributed
@@ -109,40 +106,27 @@ class Field(Deck):
         else:
             if arrange:
                 for p in range(12):
-                    for c in self.__field[p]:
+                    for c in self._field[p]:
                         if c.month == card.month:
-                            self.__field[p].append(card)
-                            GameGUI.tofield(card, p, len(self.__field[p])-1)
-                            self.arrange(p)
-                            return {"slot":p, "pos":len(self.__field[p])} 
+                            self._field[p].append(card)
+                            return {"slot":p, "pos":len(self._field[p])} 
                             # Position of put card and the number of cards in it
                 for p in range(12):
-                    if len(self.__field[p])==0:
-                        self.__field[p].append(card)
-                        GameGUI.tofield(card, p, len(self.__field[p])-1)
-                        self.arrange(p)
-                        return {"slot":p, "pos":len(self.__field[p])}
+                    if len(self._field[p])==0:
+                        self._field[p].append(card)
+                        return {"slot":p, "pos":len(self._field[p])}
             else:
                 for p in range(12):
-                    if len(self.__field[p]) == 0:
-                        self.__field[p].append(card)
-                        GameGUI.tofield(card, p, len(self.__field[p])-1)
-                        return {"slot":p, "pos":len(self.__field[p])}
+                    if len(self._field[p]) == 0:
+                        self._field[p].append(card)
+                        return {"slot":p, "pos":len(self._field[p])}
 
-    def arrange(self, slot=None): # Add chongtong case later on
-        if slot:
-            for pos in range(len(self.__field[slot])):
-                self.__field[slot][pos].raise_()
-        else:
-            for i in range(11, 0, -1):
-                for p in range(i):
-                    if len(self.__field[p])!=0 and len(self.__field[i])!=0:
-                        if self.__field[p][0].month == self.__field[i][0].month:
-                            for _ in range(len(self.__field[i])):
-                                card = self.__field[i].pop()
-                                self.__field[p].append(card)
-                            break
-            for slot in range(len(self.__field)):
-                for pos in range(len(self.__field[slot])):
-                    self.__field[slot][pos].raise_()
-                    GameGUI.tofield(self.__field[slot][pos], slot, pos, True)
+    def arrange(self): # Add chongtong case later on
+        for i in range(11, 0, -1):
+            for p in range(i):
+                if len(self._field[p])!=0 and len(self._field[i])!=0:
+                    if self._field[p][0].month == self._field[i][0].month:
+                        for _ in range(len(self._field[i])):
+                            card = self._field[i].pop()
+                            self._field[p].append(card)
+                        break

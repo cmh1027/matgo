@@ -2,28 +2,125 @@ import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))), "model"))
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))), "view"))
-import field
-import player
+from player import Player as Playermodel
+from field import Field as Fieldmodel
 import random
 from PyQt4.QtGui import *
 from PyQt4 import QtTest
 import GUI_game as GameGUI
 import GUI_screen as ScreenGUI
+from GUI_game import Status
 soundPath = os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))), "view\sound")
 
+class Player(Playermodel, Status): # Model - View connector
+    def __init__(self, window, isEnemy):
+        Status.__init__(self, window, isEnemy=isEnemy)
+        Playermodel.__init__(self, window, isEnemy=isEnemy)
+        self.update()
 
+    def gethand(self, cards):
+        if type(cards) is list:
+            for card in cards:
+                self.gethand(card)
+        else:
+            Playermodel.gethand(self, cards)
+            GameGUI.tohand(cards, len(self._hand)-1, self)
+    
+    def arrange(self):
+        Playermodel.arrange(self)
+        for slot in range(len(self._hand)):
+            GameGUI.tohand(self._hand[slot], slot, self, True)
+    
+    def getCard(self, cards):
+        if type(cards) is list:
+            while cards != []:
+                self.getCard(cards.pop())
+            self.update()
+        else:
+            Playermodel.getCard(self, cards)
+            GameGUI.toplayer(cards, self)
+    
+    def rob(self, count):
+        def arrangepee():
+            li = []
+            li.extend(self._pee)
+            self._pee.clear()
+            for card in li:
+                self._pee.append(card)
+                GameGUI.topee(card, self)
+        cards = Playermodel.rob(self, count)
+        arrangepee()
+        self.update()
+        return cards
+    
+    def update(self):
+        Playermodel.update(self)
+        if self._go == 0:
+            self._status.setText('\n뻑 : {}번\n점수 : {}점\n흔들기 : {}번\n\n'.format(self._fuck, self._score, self._shake))
+        else:
+            self._status.setText('\n뻑 : {}번\n점수 : {}점\n흔들기 : {}번\n현재 {}고\n'.format(self._fuck, self._score, self._shake, self._go))
+        self._gwanglabel.setText(len(self._gwang))
+        self._animallabel.setText(len(self._animal))
+        self._danlabel.setText(len(self._dan))
+        pee = list(filter(lambda c:c.special==None, self._pee))
+        double = list(filter(lambda c:c.special=="double", self._pee))
+        self._peelabel.setText(len(self._pee), len(pee) + 2*len(double))
+
+    def addgo(self):
+        Playermodel.addgo(self)
+        GameGUI.go(self.window, self._go)
+
+class Field(Fieldmodel): # Model - View connector
+    def __init__(self, window):
+        super().__init__(window)
+    
+    def pop(self, slot, pos=None):
+        if type(pos) is list:
+            li = super().pop(slot, pos)
+            for i in range(len(self._field[slot])):
+                GameGUI.tofield(self._field[slot][i], slot, i)
+            return li
+        else:
+            return super().pop(slot, pos)
+
+    def put(self, card, arrange=True): # arrange is false only when initially cards are distributed
+        if type(card) is list:
+            for c in card:
+                self.put(c, arrange)
+        else:
+            if arrange:
+                result = super().put(card, arrange)
+                GameGUI.tofield(card, result["slot"], len(self._field[result["slot"]])-1)
+                self.arrange(result["slot"])
+                return result
+            else:
+                result = super().put(card, arrange)
+                GameGUI.tofield(card, result["slot"], len(self._field[result["slot"]])-1)
+                return result
+
+    def arrange(self, slot=None):
+        if slot:
+            for pos in range(len(self._field[slot])):
+                self._field[slot][pos].raise_()
+        else:
+            super().arrange()
+            for slot in range(len(self._field)):
+                for pos in range(len(self._field[slot])):
+                    self._field[slot][pos].raise_()
+                    GameGUI.tofield(self._field[slot][pos], slot, pos, True)
+        
 
 class Game:
     def __init__(self, window):
         self.window = window
-        self.player1 = player.Player(window, isEnemy=False)
-        self.player2 = player.Player(window, isEnemy=True)
+        self.player1 = Player(window, isEnemy=False)
+        self.player2 = Player(window, isEnemy=True)
         self.myturn = True
-        self.field = field.Field(window)
+        self.field = Field(window)
     
     def replay(self):
-        self.player1 = player.Player(window, isEnemy=False)
-        self.player2 = player.Player(window, isEnemy=True)
+        self.player1 = Player(window, isEnemy=False)
+        self.player2 = Player(window, isEnemy=True)
         self.myturn = True
         self.field = field.Field(window)
         self.ready()
@@ -50,9 +147,9 @@ class Game:
         if fourcardcheck[0] or fourcardcheck[1]:
             GameGUI.chongtong(self.window, fourcardcheck[0], fourcardcheck[1])
             if fourcardcheck[0] and not fourcardcheck[1]:
-                self.gameresult(winner=self.player1, "chongtong")
+                self.gameresult(winner=self.player1, special="chongtong")
             elif not fourcardcheck[0] and fourcardcheck[1]:
-                self.gameresult(winner=self.player2, "chongtong")
+                self.gameresult(winner=self.player2, special="chongtong")
             else:
                 self.gameresult(winner=None)
             return
@@ -85,6 +182,7 @@ class Game:
             QtTest.QTest.qWait(700)
         else:
             if selected.prop == "bomb":
+                player.put(slot)
                 firstput = {"slot":None, "pos":None}
             else:
                 firstput = self.field.put(player.put(slot))
@@ -100,18 +198,18 @@ class Game:
             if secondput["pos"] == 2: # Kiss
                 rob+=1
                 getcards.extend(self.field.pop(firstput["slot"]))
-                GameGUI.kiss(self.window, player)
+                GameGUI.kiss(self.window)
             elif secondput["pos"] == 3: # Fuck
                 player.addfuck()
                 player.addfuckmonth(self.field.current[firstput["slot"]][0].month)
-                GameGUI.fuck(self.window, player)
+                GameGUI.fuck(self.window)
                 if player.fuck==3:
-                    GameGUI.threefuck(self.window, player)
-                    return self.gameresult(winner=player, "threefuck")
+                    GameGUI.threefuck(self.window)
+                    return self.gameresult(winner=player, special="threefuck")
             elif secondput["pos"] == 4: # Tadack
                 rob+=1
                 getcards.extend(self.field.pop(firstput["slot"]))
-                GameGUI.tadack(self.window, player)
+                GameGUI.tadack(self.window)
         else:
             if firstput["pos"] == 4:
                 if bomb:
@@ -121,9 +219,9 @@ class Game:
                     rob+=1 # Get fuck
                     if self.field.current[firstput["slot"]][0].month in player.fuckmonth: # Jafuck
                         rob += 1
-                        GameGUI.jafuck(self.window, player)
+                        GameGUI.jafuck(self.window)
                     else:
-                        GameGUI.getfuck(self.window, player)
+                        GameGUI.getfuck(self.window)
                     getcards.extend(self.field.pop(firstput["slot"]))
             elif firstput["pos"] == 3:
                 select = self.whattoget(player, self.field.current[firstput["slot"]][0:2])
@@ -134,9 +232,9 @@ class Game:
                 rob+=1
                 if self.field.current[secondput["slot"]][0].month in player.fuckmonth: # Jafuck
                     rob += 1
-                    GameGUI.jafuck(self.window, player)
+                    GameGUI.jafuck(self.window)
                 else:
-                    GameGUI.getfuck(self.window, player)
+                    GameGUI.getfuck(self.window)
                 getcards.extend(self.field.pop(secondput["slot"]))
             elif secondput["pos"] == 3:
                 select = self.whattoget(player, self.field.current[secondput["slot"]][0:2])
@@ -157,19 +255,19 @@ class Game:
         player.getCard(getcards)
         if list(filter(lambda c:c.prop=="gwang", getcards)) != []:
             if len(player.gwang)>=3:
-                GameGUI.gwang(self.window, player, len(player.gwang))
+                GameGUI.gwang(self.window, len(player.gwang))
         if list(filter(lambda c:c.special=="godori", getcards)) != []:
             if player.haveAllGodori():
-                GameGUI.godori(self.window, player)
+                GameGUI.godori(self.window)
         if list(filter(lambda c:c.special=="red", getcards)) != []:
             if player.haveAllRed():
-                GameGUI.reddan(self.window, player)
+                GameGUI.reddan(self.window)
         if list(filter(lambda c:c.special=="blue", getcards)) != []:
             if player.haveAllBlue():
-                GameGUI.bluedan(self.window, player)
+                GameGUI.bluedan(self.window)
         if list(filter(lambda c:c.special=="cho", getcards)) != []:
             if player.haveAllCho():
-                GameGUI.chodan(self.window, player)
+                GameGUI.chodan(self.window)
         QtTest.QTest.qWait(1000)
         if(bomb):
             player.gethandbombs()  
@@ -197,7 +295,7 @@ class Game:
     
     def askgo(self, player):
         if player.isEnemy:
-            return random.randrange(2)
+            return 1
         else:
             # return GameGUI.askgo(self.window, player)
             return False

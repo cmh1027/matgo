@@ -17,7 +17,7 @@ class CardLabel(QLabel):
         self.move(350, 200)
         self.show()
 
-class Status():
+class Status:
     class StatusLabel(QLabel):
         def __init__(self, window, isEnemy):
             super().__init__(window)
@@ -101,11 +101,12 @@ class Status():
                 self.move(33+7*num, 375)
 
     def __init__(self, window, isEnemy):
-        self.status = self.StatusLabel(window, isEnemy)
-        self.gwanglabel = self.GwangLabel(window, isEnemy)
-        self.animallabel = self.AnimalLabel(window, isEnemy)
-        self.danlabel = self.DanLabel(window, isEnemy)
-        self.peelabel = self.PeeLabel(window, isEnemy)
+        self._status = self.StatusLabel(window, isEnemy)
+        self._gwanglabel = self.GwangLabel(window, isEnemy)
+        self._animallabel = self.AnimalLabel(window, isEnemy)
+        self._danlabel = self.DanLabel(window, isEnemy)
+        self._peelabel = self.PeeLabel(window, isEnemy)
+
 
 class Dialog(QLabel):
     def __init__(self, window, width, height):
@@ -247,9 +248,9 @@ def shake(window, cards):
 
 def bomb(window, field, player, cards):
     field.put(player.put(cards.pop(0)))
-    QtTest.QTest.qWait(300)
+    QtTest.QTest.qWait(400)
     field.put(player.put(cards.pop(0)))
-    QtTest.QTest.qWait(300)
+    QtTest.QTest.qWait(400)
     firstput = field.put(player.put(cards.pop(0)))
     QtTest.QTest.qWait(400)
     QSound(os.path.join(soundPath, "bomb.wav")).play()
@@ -257,43 +258,79 @@ def bomb(window, field, player, cards):
     return firstput
 
 def selectdual(window):
-    pass    
+    pass
 
 def whattoget(window, cards):
     pass
 
-def threefuck(window, player):
+def threefuck(window):
     print('쓰리뻑')
+    QSound(os.path.join(soundPath, "woohoo.wav")).play()
+    QtTest.QTest.qWait(1500)
 
-def godori(window, player):
+def godori(window):
     print('고도리')
+    QSound(os.path.join(soundPath, "godori.wav")).play()
+    QtTest.QTest.qWait(1500)
+    
 
-def reddan(window, player):
+def reddan(window):
     print('홍단')
+    QSound(os.path.join(soundPath, "reddan.wav")).play()
+    QtTest.QTest.qWait(1500)
+    
 
-def bluedan(window, player):
+def bluedan(window):
     print('청단')
-
-def chodan(window, player):
+    QSound(os.path.join(soundPath, "bluedan.wav")).play()
+    QtTest.QTest.qWait(1500)
+    
+def chodan(window):
     print('초단')
+    QSound(os.path.join(soundPath, "chodan.wav")).play()
+    QtTest.QTest.qWait(1500)
+   
 
-def gwang(window, player, count):
+def gwang(window, count):
     print('{}광'.format(count))
+    QSound(os.path.join(soundPath, "gwang{}.wav".format(count))).play()
+    QtTest.QTest.qWait(1500)
+        
 
-def askgo(window, player):
+def askgo(window):
     pass
 
-def kiss(window, player):
+def go(window, count):
+    print("{}고".format(count))
+    QSound(os.path.join(soundPath, "go{}.wav".format(count))).play()
+    QtTest.QTest.qWait(1500)    
+
+def kiss(window):
     print("쪽")
+    QSound(os.path.join(soundPath, "woohoo.wav")).play()
+    QtTest.QTest.qWait(1500)
+    
 
-def fuck(window, player):
+def fuck(window):
     print("뻑")
+    QSound(os.path.join(soundPath, "doh.wav")).play()
+    QtTest.QTest.qWait(1500)
+    
 
-def getfuck(window, player):
+def getfuck(window):
     print("뻑 얻음")
+    QSound(os.path.join(soundPath, "woohoo.wav")).play()
+    QtTest.QTest.qWait(1500)
+    
 
-def jafuck(window, player):
+def jafuck(window):
     print("자뻑")
+    QSound(os.path.join(soundPath, "woohoo.wav")).play()
+    QtTest.QTest.qWait(1500)
+    
 
-def tadack(window, player):
+def tadack(window):
     print("따닥")
+    QSound(os.path.join(soundPath, "woohoo.wav")).play()
+    QtTest.QTest.qWait(1500)
+    
