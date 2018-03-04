@@ -37,7 +37,7 @@ class Game:
         self.__push += 1
 
     def replay(self, winner=None):
-        for components in self.window.findChildren(Card): # remove Start / Exit Buttons
+        for components in self.window.findChildren(Card):
             components.setParent(None)
         self.__me = Player(self.window, isEnemy=False)
         self.__enemy = Player(self.window, isEnemy=True)
@@ -199,7 +199,7 @@ class Game:
                 player.chodan()
         QtTest.QTest.qWait(1000)
         if(bomb):
-            player.gethandbombs()  
+            player.gethandbombs()
         if player.score_go < player.score and 7<=player.score:
             if len(player.hand) == 0:
                 return self.gameresult(winner=player)
@@ -212,6 +212,7 @@ class Game:
                     QtTest.QTest.qWait(1000)
         if(len(self.__me.hand)==0 and len(self.__enemy.hand)==0):
             return self.gameresult(winner=None)
+
 
     def gameresult(self, winner=None, special=None):
         def enemy(player):
