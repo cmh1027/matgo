@@ -2,16 +2,24 @@ from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from PyQt4 import QtTest
 import os
-soundPath = os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))), "view\sound")
 class CardLabel(QLabel):
-    def __init__(self, name=None):
-        super().__init__()
+    def __init__(self, window, name=None):
+        super().__init__(window)
+        self.setAlignment(Qt.AlignCenter)
+        self.setStyleSheet("color:red;")
         if not name:
-            card_image = QPixmap(os.path.join(os.getcwd(), "view\img_matgo\cards\\tail.png"))
+            self.setImage(os.path.join(os.getcwd(), "view\img_matgo\cards\\tail.png"))
         else:
-            card_image = QPixmap(os.path.join(os.getcwd(), "view\img_matgo\cards\\"+name))
-        self.setPixmap(card_image)
-        self.resize(card_image.size().width(), card_image.size().height())
+            self.setImage(os.path.join(os.getcwd(), "view\img_matgo\cards\\"+name))
+        
+    def setImage(self, image):
+        if(os.path.exists(image)):
+            card_image = QPixmap(image)
+            self.setPixmap(card_image)
+            self.resize(card_image.size().width(), card_image.size().height())
+        else:
+            self.resize(37, 60)
+            self.setText("Image\nnot\nfound")
 
 class Status:
     class StatusLabel(QLabel):
@@ -96,12 +104,19 @@ class Status:
             else:
                 self.move(33+7*num, 375)
 
-    def __init__(self, window, isEnemy):
-        self._status = self.StatusLabel(window, isEnemy)
-        self._gwanglabel = self.GwangLabel(window, isEnemy)
-        self._animallabel = self.AnimalLabel(window, isEnemy)
-        self._danlabel = self.DanLabel(window, isEnemy)
-        self._peelabel = self.PeeLabel(window, isEnemy)
+    def __init__(self, window, isEnemy): # FIX
+        self.status = self.StatusLabel(window, isEnemy)
+        self.gwanglabel = self.GwangLabel(window, isEnemy)
+        self.animallabel = self.AnimalLabel(window, isEnemy)
+        self.danlabel = self.DanLabel(window, isEnemy)
+        self.peelabel = self.PeeLabel(window, isEnemy)
+    
+    def setParent(self, window):
+        self.status.setParent(window)
+        self.gwanglabel.setParent(window)
+        self.animallabel.setParent(window)
+        self.danlabel.setParent(window)
+        self.peelabel.setParent(window)
 
 
 class Dialog(QLabel):
@@ -116,129 +131,189 @@ class ShakeDialog(Dialog): # 180 120
     def __init__(self, window, cards, width, height):
         super().__init__(window, width, height)
         qv = QVBoxLayout()
-        title = QLabel("흔들었습니다", window)
-        title.setFont(QFont("Times", 14, QFont.Bold))
-        qv.addWidget(title, 0, Qt.AlignCenter)
+        titleLabel = QLabel("흔들었습니다", self)
+        titleLabel.setFont(QFont("Times", 14, QFont.Bold))
+        qv.addWidget(titleLabel, 0, Qt.AlignCenter)
         qh = QHBoxLayout()
         for card in cards:
-            label = CardLabel(window, card.imageName)
+            label = CardLabel(self, card.imageName)
             qh.addWidget(label)
         qv.addLayout(qh)
         self.setLayout(qv)
 
-class ChongtongDialog(Dialog): # 180 120
+class ChongtongDialog(Dialog):
     def __init__(self, window, cards, width, height):
         super().__init__(window, width, height)
         qv = QVBoxLayout()
-        title = QLabel("총통!", window)
-        title.setFont(QFont("Times", 14, QFont.Bold))
-        qv.addWidget(title, 0, Qt.AlignCenter)
+        titleLabel = QLabel("총통!", self)
+        titleLabel.setFont(QFont("Times", 14, QFont.Bold))
+        qv.addWidget(titleLabel, 0, Qt.AlignCenter)
         if len(cards) == 4:
             qh = QHBoxLayout()    
             for card in cards:
-                label = CardLabel(window, card.imageName)
+                label = CardLabel(self, card.imageName)
                 qh.addWidget(label)
             qv.addLayout(qh)
         else:
             qh = QHBoxLayout()    
             for card in cards[0:4]:
-                label = CardLabel(window, card.imageName)
+                label = CardLabel(self, card.imageName)
                 qh.addWidget(label)
             qv.addLayout(qh)
             qh = QHBoxLayout()    
             for card in cards[4:8]:
-                label = CardLabel(window, card.imageName)
+                label = CardLabel(self, card.imageName)
                 qh.addWidget(label)
             qv.addLayout(qh)
         self.setLayout(qv)
 
+class ResultDialog(Dialog):
+    def __init__(self, window, title, width, height, messages=None, money=None):
+        super().__init__(window, width, height)
+        qv = QVBoxLayout()
+        titleLabel = QLabel(title, window)
+        titleLabel.setFont(QFont("Times", 24, QFont.Bold))
+        qv.addWidget(titleLabel, 0, Qt.AlignCenter)
+        if messages:
+            messageLabel = QLabel('\n'.join(messages), window)
+            messageLabel.setFont(QFont("Times", 14))
+        else:
+            messageLabel = QLabel('무승부', window)
+            messageLabel.setFont(QFont("Times", 14))
+        qv.addWidget(messageLabel, 0, Qt.AlignCenter)            
+        if money:
+            moneyLabel = QLabel(str(money)+"원", window)
+            moneyLabel.setFont(QFont("Times", 24, QFont.Bold))
+        else:
+            moneyLabel = QLabel("재시작합니다", window)
+            moneyLabel.setFont(QFont("Times", 24, QFont.Bold))
+        qv.addWidget(moneyLabel, 0, Qt.AlignCenter)            
+        self.setLayout(qv)
+
+class ResultDialog(Dialog):
+    def __init__(self, window, title, width, height, messages=None, money=None):
+        super().__init__(window, width, height)
+        qv = QVBoxLayout()
+        titleLabel = QLabel(title, window)
+        titleLabel.setFont(QFont("Times", 24, QFont.Bold))
+        qv.addWidget(titleLabel, 0, Qt.AlignCenter)
+        if messages:
+            messageLabel = QLabel('\n'.join(messages), window)
+            messageLabel.setFont(QFont("Times", 14))
+        else:
+            messageLabel = QLabel('무승부', window)
+            messageLabel.setFont(QFont("Times", 14))
+        qv.addWidget(messageLabel, 0, Qt.AlignCenter)            
+        if money:
+            moneyLabel = QLabel(str(money)+"원", window)
+            moneyLabel.setFont(QFont("Times", 24, QFont.Bold))
+        else:
+            moneyLabel = QLabel("재시작합니다", window)
+            moneyLabel.setFont(QFont("Times", 24, QFont.Bold))
+        qv.addWidget(moneyLabel, 0, Qt.AlignCenter)            
+        self.setLayout(qv)
+
 class FieldGUI:
-    def __init__(self, window):
-        self.window = window
+    def __init__(self, parent):
+        self.parent = parent
     def tofield(self, card, slot, pos, arrange=False):
         if not card.fliped:
             card.flip()
-        card.move(10+slot//2*55+5*pos+20*(slot%2), 150+85*(slot%2)+5*pos)
+            self.parent.flipcard.emit(card)
+        self.parent.movecard.emit(card, 10+slot//2*55+5*pos+20*(slot%2), 150+85*(slot%2)+5*pos)
         if pos==0:
             if not arrange:
-                QSound(os.path.join(soundPath, "whoop.wav")).play()
+                self.parent.playsound.emit("whoop")
         else:
             if not arrange:
-                QSound(os.path.join(soundPath, "whip.wav")).play()
+                self.parent.playsound.emit("whip")
+
     def clear(self):
         print('싹쓸')
-        QSound(os.path.join(soundPath, "woohoo.wav")).play()
+        self.parent.playsound.emit("clear")
         QtTest.QTest.qWait(1500)
-        
+
+def attachEventHand(controller, hand, field):
+    def select(number):
+        for i in range(len(hand)):
+            controller.cardlabels[hand[i]].mousePressEvent = None
+            for label in controller.cardlabels[hand[i]].findChildren(QWidget):
+                label.setParent(None)
+        controller.answer.emit(number)
+    for i in range(len(hand)):
+        controller.cardlabels[hand[i]].mousePressEvent = lambda state, number=i:select(number)
+        if field.exist(hand[i]):
+            exist = QLabel("↖", controller.cardlabels[hand[i]])
+            exist.show()
 
 class PlayerGUI:
-    def __init__(self, window, player, field):
-        self.window = window
+    def __init__(self, parent, player, field):
+        self.parent = parent
         self.player = player
         self.field = field
 
     def tohand(self, card, slot, arrange=False):
         if self.player.isEnemy:
-            card.move(476+(slot%5)*40, 5+68*(slot//5))
+            self.parent.movecard.emit(card, 476+(slot%5)*40, 5+68*(slot//5))
         else:
             card.flip()
-            card.move(476+(slot%5)*40, 326+68*(slot//5))
+            self.parent.flipcard.emit(card)
+            self.parent.movecard.emit(card, 476+(slot%5)*40, 326+68*(slot//5))
         if not arrange:
-            QSound(os.path.join(soundPath, "whoop.wav")).play()
+            self.parent.playsound.emit("whoop")
 
-    def toplayer(self, card):
-        if card.prop == "gwang":
-            self.togwang(card)
-        elif card.prop == "animal":
-            self.toanimal(card)
-        elif card.prop == "dan":
-            self.todan(card)
+    def toplayer(self, cards):
+        if type(cards) is list:
+            for card in cards:
+                if card.prop == "gwang":
+                    self.togwang(card)
+                elif card.prop == "animal":
+                    self.toanimal(card)
+                elif card.prop == "dan":
+                    self.todan(card)
+                else:
+                    self.topee(card)
+            if len(cards) != 0:
+                self.parent.playsound.emit("whoop")
         else:
-            self.topee(card)
-        QSound(os.path.join(soundPath, "whoop.wav")).play()
-    
+            if cards.prop == "gwang":
+                self.togwang(cards)
+            elif cards.prop == "animal":
+                self.toanimal(cards)
+            elif cards.prop == "dan":
+                self.todan(cards)
+            else:
+                self.topee(cards)
+            self.parent.playsound.emit("whoop") 
+        
+            
     def togwang(self, card):
-        card.raise_()
+        self.parent.raisecard.emit(card)
         if self.player.isEnemy:
-            card.move(2+(len(self.player.gwang)-1)*7, 3)
+            self.parent.movecard.emit(card, 2+(len(self.player.gwang)-1)*7, 3)
         else:
-            card.move(2+(len(self.player.gwang)-1)*7, 395)
+            self.parent.movecard.emit(card, 2+(len(self.player.gwang)-1)*7, 395)
 
     def toanimal(self, card):
-        card.raise_()
+        self.parent.raisecard.emit(card)
         if self.player.isEnemy:
-            card.move(115+(len(self.player.animal)-1)*7, 3)
+            self.parent.movecard.emit(card, 115+(len(self.player.animal)-1)*7, 3)
         else:
-            card.move(119+(len(self.player.animal)-1)*7, 395)
+            self.parent.movecard.emit(card, 119+(len(self.player.animal)-1)*7, 395)
 
     def todan(self, card):
-        card.raise_()
+        self.parent.raisecard.emit(card)
         if self.player.isEnemy:
-            card.move(237+(len(self.player.dan)-1)*7, 3)           
+            self.parent.movecard.emit(card, 237+(len(self.player.dan)-1)*7, 3)          
         else:
-            card.move(241+(len(self.player.dan)-1)*7, 395)
+            self.parent.movecard.emit(card, 241+(len(self.player.dan)-1)*7, 395)
 
     def topee(self, card):
-        card.raise_()
+        self.parent.raisecard.emit(card)
         if self.player.isEnemy:
-            card.move(2+(len(self.player.pee)-1)*7, 72)
+            self.parent.movecard.emit(card, 2+(len(self.player.pee)-1)*7, 72)
         else:
-            card.move(2+(len(self.player.pee)-1)*7, 325)
-
-    def attachEventHand(self):
-        """
-        def select(slot):
-            global selected
-            selected = slot
-            removeEventHand()
-        for i in range(len(self.player.hand)):
-            self.player.hand[i].mousePressEvent = lambda state, slot=i: select(slot)
-        """
-        return 0
-        
-    def removeEventHand(self):
-        for i in range(len(self.player.hand)):
-            self.player.hand[i].mousePressEvent = None
+            self.parent.movecard.emit(card, 2+(len(self.player.pee)-1)*7, 325)
 
     def selectdual(self):
         answer = input("Treat as pee? : ")
@@ -263,18 +338,20 @@ class PlayerGUI:
 
     def chongtong(self, cards1, cards2):
         if not(cards1 and cards2):
-            dialog = ChongtongDialog(self.window, cards1, 260, 140)
+            if cards1:
+                self.parent.chongtong.emit(cards1, 230, 140)
+            else:
+                self.parent.chongtong.emit(cards2, 230, 140)
         else:
             cards1.extend(cards2)
-            dialog = ChongtongDialog(self.window, cards1, 260, 280)
+            self.parent.chongtong.emit(cards1, 230, 280)
         QtTest.QTest.qWait(2000)
-        dialog.setParent(None)
+        
 
     def shake(self, cards):
-        QSound(os.path.join(soundPath, "shake.wav")).play()
-        dialog = ShakeDialog(self.window, cards, 200, 140)
+        self.parent.playsound.emit("shake")
+        self.parent.shake.emit(cards, 200, 140)
         QtTest.QTest.qWait(2000)
-        dialog.setParent(None)
 
     def bomb(self, cards):
         self.field.put(self.player.put(cards.pop(0)))
@@ -283,83 +360,97 @@ class PlayerGUI:
         QtTest.QTest.qWait(400)
         firstput = self.field.put(self.player.put(cards.pop(0)))
         QtTest.QTest.qWait(400)
-        QSound(os.path.join(soundPath, "bomb.wav")).play()
+        self.parent.playsound.emit("bomb")
         QtTest.QTest.qWait(500)
         return firstput
 
 
     def threefuck(self):
         print('쓰리뻑')
-        QSound(os.path.join(soundPath, "woohoo.wav")).play()
+        self.parent.playsound.emit("threefuck")
         QtTest.QTest.qWait(1500)
 
-    def godori(self):
+    def allgodori(self):
         print('고도리')
-        QSound(os.path.join(soundPath, "godori.wav")).play()
+        self.parent.playsound.emit("godori")
         QtTest.QTest.qWait(1500)
         
 
-    def reddan(self):
+    def allreddan(self):
         print('홍단')
-        QSound(os.path.join(soundPath, "reddan.wav")).play()
+        self.parent.playsound.emit("reddan")
         QtTest.QTest.qWait(1500)
         
 
-    def bluedan(self):
+    def allbluedan(self):
         print('청단')
-        QSound(os.path.join(soundPath, "bluedan.wav")).play()
+        self.parent.playsound.emit("bluedan")
         QtTest.QTest.qWait(1500)
         
-    def chodan(self):
+    def allchodan(self):
         print('초단')
-        QSound(os.path.join(soundPath, "chodan.wav")).play()
+        self.parent.playsound.emit("chodan")
         QtTest.QTest.qWait(1500)
     
 
-    def gwang(self, count):
-        print('{}광'.format(count))
-        QSound(os.path.join(soundPath, "gwang{}.wav".format(count))).play()
+    def allgwang(self, count, bee=False):
+        if not bee:
+            print('{}광'.format(count))
+        else:
+            print("비삼광")
+        self.parent.playsound.emit("gwang{}".format(count))
         QtTest.QTest.qWait(1500)
             
 
     def go(self, count):
         print("{}고".format(count))
-        QSound(os.path.join(soundPath, "go{}.wav".format(count))).play()
-        QtTest.QTest.qWait(1500)    
+        self.parent.playsound.emit("go{}".format(count))
+        QtTest.QTest.qWait(1500)
+
+    def stop(self):
+        print("스톱")
+        self.parent.playsound.emit("stop")
+        QtTest.QTest.qWait(1500)   
 
     def kiss(self):
         print("쪽")
-        QSound(os.path.join(soundPath, "woohoo.wav")).play()
+        self.parent.playsound.emit("kiss")
         QtTest.QTest.qWait(1500)
         
 
     def fuck(self):
         print("뻑")
-        QSound(os.path.join(soundPath, "doh.wav")).play()
+        self.parent.playsound.emit("fuck")
         QtTest.QTest.qWait(1500)
         
 
     def getfuck(self):
         print("뻑 얻음")
-        QSound(os.path.join(soundPath, "woohoo.wav")).play()
+        self.parent.playsound.emit("getfuck")
         QtTest.QTest.qWait(1500)
         
 
     def jafuck(self):
         print("자뻑")
-        QSound(os.path.join(soundPath, "woohoo.wav")).play()
+        self.parent.playsound.emit("getfuck")
         QtTest.QTest.qWait(1500)
 
     def tadack(self):
         print("따닥")
-        QSound(os.path.join(soundPath, "woohoo.wav")).play()
+        self.parent.playsound.emit("tadack")
         QtTest.QTest.qWait(1500)
 
-    def nagari(self):
-        pass
-
     def result(self, info):
-        pass
+        if info["winner"] == None:
+            self.parent.playsound.emit("lose")
+            self.parent.result.emit("나가리", 260, 140, None, None)
+        elif info["winner"]:
+            self.parent.playsound.emit("win")
+            self.parent.result.emit("승리", 260, 240+10*len(info["messages"]), info["messages"], info["money"])
+        else:
+            self.parent.playsound.emit("lose")
+            self.parent.result.emit("패배", 260, 240+10*len(info["messages"]), info["messages"], info["money"])
+        QtTest.QTest.qWait(4500)
     
     def askpush(self):
         answer = input("Push? : ")

@@ -6,14 +6,12 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__f
 from GUI_game import FieldGUI
 
 class Field(Fieldmodel, FieldGUI): # Model - View connector
-    def __init__(self, window):
+    def __init__(self, parent):
+        self.parent = parent
         Fieldmodel.__init__(self)
-        FieldGUI.__init__(self, window)
+        FieldGUI.__init__(self, parent)
         for card in self._deck:
-            card.setParent(window)
-            card.move(350, 200)
-            card.show()
-
+            parent.addcard.emit(card)
     def pop(self, slot, pos=None):
         if type(pos) is list:
             li = Fieldmodel.pop(self, slot, pos)
@@ -35,16 +33,16 @@ class Field(Fieldmodel, FieldGUI): # Model - View connector
                 return result
             else:
                 result = Fieldmodel.put(self, card, arrange)
-                FieldGUI.tofield(self, card, result["slot"], len(self._field[result["slot"]])-1)
+                FieldGUI.tofield(self, card, result["slot"], len(self._field[result["slot"]])-1, True)
                 return result
 
     def arrange(self, slot=None):
         if slot:
             for pos in range(len(self._field[slot])):
-                self._field[slot][pos].raise_()
+                self.parent.raisecard.emit(self._field[slot][pos])
         else:
             Fieldmodel.arrange(self)
             for slot in range(len(self._field)):
                 for pos in range(len(self._field[slot])):
-                    self._field[slot][pos].raise_()
+                    self.parent.raisecard.emit(self._field[slot][pos])
                     FieldGUI.tofield(self, self._field[slot][pos], slot, pos, True)

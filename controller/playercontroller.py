@@ -3,24 +3,23 @@ import os
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))), "model"))
 from player import Player as Playermodel
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))), "view"))
-from GUI_game import Status, PlayerGUI
-
-class Player(Playermodel, Status, PlayerGUI): # Model - View connector
-    def __init__(self, window, isEnemy, field):
-        self.window = window
-        Status.__init__(self, window, isEnemy=isEnemy)
+from GUI_game import PlayerGUI
+from PyQt4.QtTest import QTest
+class Player(Playermodel, PlayerGUI): # Model - View connector
+    def __init__(self, parent, isEnemy, field):
+        self.parent = parent
+        parent.addstatus.emit(isEnemy)
         player = Playermodel.__init__(self, isEnemy=isEnemy)
-        PlayerGUI.__init__(self, window, player, field)
+        PlayerGUI.__init__(self, parent, player, field)
         self.update()
-    
 
-    def gethand(self, cards):
+    def gethand(self, cards, arrange=False):
         if type(cards) is list:
             for card in cards:
-                self.gethand(card)
+                self.gethand(card, arrange)
         else:
             Playermodel.gethand(self, cards)
-            PlayerGUI.tohand(self, cards, len(self._hand)-1)
+            PlayerGUI.tohand(self, cards, len(self._hand)-1, arrange)
     
     def arrange(self):
         Playermodel.arrange(self)
@@ -28,13 +27,9 @@ class Player(Playermodel, Status, PlayerGUI): # Model - View connector
             PlayerGUI.tohand(self, self._hand[slot], slot, True)
     
     def getCard(self, cards):
-        if type(cards) is list:
-            while cards != []:
-                self.getCard(cards.pop())
-            self.update()
-        else:
-            Playermodel.getCard(self, cards)
-            PlayerGUI.toplayer(self, cards)
+        Playermodel.getCard(self, cards)
+        PlayerGUI.toplayer(self, cards)
+        self.update()
     
     def rob(self, count):
         def arrangepee():
@@ -52,23 +47,25 @@ class Player(Playermodel, Status, PlayerGUI): # Model - View connector
     def update(self):
         Playermodel.update(self)
         if self._gocount == 0:
-            self._status.setText('\n뻑 : {}번\n점수 : {}점\n흔들기 : {}번\n\n'.format(self._fuckcount, self._score, self._shakecount))
+            status = '\n뻑 : {}번\n점수 : {}점\n흔들기 : {}번\n\n'.format(self._fuckcount, self._score, self._shakecount)
         else:
-            self._status.setText('\n뻑 : {}번\n점수 : {}점\n흔들기 : {}번\n현재 {}고\n'.format(self._fuckcount, self._score, self._shakecount, self._gocount))
-        self._gwanglabel.setText(len(self._gwang))
-        self._animallabel.setText(len(self._animal))
-        self._danlabel.setText(len(self._dan))
-        pee = list(filter(lambda c:c.special==None, self._pee))
-        double = list(filter(lambda c:c.special=="double", self._pee))
-        self._peelabel.setText(len(self._pee), len(pee) + 2*len(double))
+            status = '\n뻑 : {}번\n점수 : {}점\n흔들기 : {}번\n현재 {}고\n'.format(self._fuckcount, self._score, self._shakecount, self._gocount)
+        gwang = len(self._gwang)
+        animal = len(self._animal)
+        dan = len(self._dan)
+        peenum = len(self._pee)
+        peesum = len(list(filter(lambda c:c.special==None, self._pee))) + 2*len(list(filter(lambda c:c.special=="double", self._pee)))
+        self.parent.updatestatus.emit(self.isEnemy, status, gwang, animal, dan, peenum, peesum)
 
     def addgo(self):
         Playermodel.addgo(self)
         PlayerGUI.go(self, self._gocount)
+    
+    def stop(self):
+        PlayerGUI.stop(self)
 
     def gethandbombs(self):
         Playermodel.gethandbombs(self)
         for card in self._hand[-2:]:
-            card.setParent(self.window)
-            card.show()
+            self.parent.addcard.emit(card)
         self.arrange()

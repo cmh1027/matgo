@@ -1,0 +1,38 @@
+{
+    "nickname" : "minhyuk",
+    "image":{
+        "my_profile" : "view/img_matgo/myimage.png",
+        "computer_profile" : "view/img_matgo/computer.png",
+        "field_image" : "view/img_matgo/field.png"
+    },
+    "sound":{
+        "bomb" : "view/sound/bomb.wav",
+        "bluedan" : "view/sound/bluedan.wav",
+        "chodan" : "view/sound/chodan.wav",
+        "reddan" : "view/sound/reddan.wav",
+        "go1" : "view/sound/go1.wav",
+        "go2" : "view/sound/go2.wav",
+        "go3" : "view/sound/go3.wav",
+        "go4" : "view/sound/go4.wav",
+        "go5" : "view/sound/go5.wav",
+        "go6" : "view/sound/go6.wav",
+        "go7" : "view/sound/go7.wav",
+        "stop" : "view/sound/stop.wav",
+        "godori" : "view/sound/godori.wav",
+        "gwang3" : "view/sound/gwang3.wav",
+        "gwang4" : "view/sound/gwang4.wav",
+        "gwang5" : "view/sound/gwang5.wav",
+        "lose" : "view/sound/lose.wav",
+        "shake" : "view/sound/shake.wav",
+        "start" : "view/sound/start.wav",
+        "whip" : "view/sound/whip.wav",
+        "whoop" : "view/sound/whoop.wav",
+        "win" : "view/sound/win.wav",
+        "fuck" : "view/sound/doh.wav",
+        "getfuck" : "view/sound/woohoo.wav",
+        "kiss" : "view/sound/woohoo.wav",
+        "tadack" : "view/sound/woohoo.wav",
+        "clear" : "view/sound/win.wav",
+        "threefuck" : "view/sound/woohoo.wav"
+    }
+}

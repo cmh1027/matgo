@@ -1,22 +1,34 @@
+import random
 import os
 import sys
-import random
+from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from PyQt4 import QtTest
 from playercontroller import Player
 from fieldcontroller import Field
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))), "model"))
 from card import Card
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))), "view"))
-import GUI_screen as ScreenGUI
-soundPath = os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))), "view\sound")
 
-class Game:
-    def __init__(self, window, panmoney=None, winner=None):
-        self.window = window
-        self.__field = Field(window)
-        self.__me = Player(window, False, self.__field)
-        self.__enemy = Player(window, True, self.__field)
+class Game(QThread):
+    playsound = pyqtSignal(str)
+    addstatus = pyqtSignal(bool)
+    updatestatus = pyqtSignal(bool, str, int, int, int, int, int)
+    addcard = pyqtSignal(Card)
+    removecard = pyqtSignal(Card)
+    flipcard = pyqtSignal(Card)
+    raisecard = pyqtSignal(Card)
+    movecard = pyqtSignal(Card, int, int) # x, y
+    setparent = pyqtSignal(QWidget)
+    shake = pyqtSignal(list, int, int)
+    chongtong = pyqtSignal(list, int, int)
+    result = pyqtSignal(str, int, int, list, int)
+    endgame = pyqtSignal(dict) # winner
+    attacheventhand = pyqtSignal(list, Field)
+
+    def __init__(self, panmoney=None, winner=None, draw=0, push=0):
+        super().__init__()
+        self.waitforResponse = False
+        self.answer = None
         if panmoney:
             self.__panmoney = panmoney
         else:
@@ -27,70 +39,82 @@ class Game:
             self.__myturn = True
         else:
             self.__myturn = False
-        self.__draw = 0
-        self.__push = 0
-    
+        self.__draw = draw
+        self.__push = push
+
+    @property
     def draw(self):
-        self.__draw += 1
-
+        return self.__draw
+    @property
     def push(self):
-        self.__push += 1
+        return self.__push
+    
+    def run(self):
+        self.begin()
 
-    def replay(self, winner=None):
-        for components in self.window.findChildren(Card):
-            components.setParent(None)
-        self.__me = Player(self.window, isEnemy=False)
-        self.__enemy = Player(self.window, isEnemy=True)
-        if winner == True:
-            self.__myturn = True
-        elif winner == False:
-            self.__myturn = False
-        self.__field = Field(self.window)
-        self.ready()
-        return self.start()
-
-    def ready(self):
+    def begin(self):
+        self.__field = Field(self)
+        self.__me = Player(self, False, self.__field)
+        self.__enemy = Player(self, True, self.__field)
         for _ in range(2):
-            QtTest.QTest.qWait(500)
+            self.playsound.emit("whoop")
             self.__field.put(self.__field.deckpop(count=4), False)
             QtTest.QTest.qWait(500)
-            self.__me.gethand(self.__field.deckpop(count=5))
+            self.playsound.emit("whoop")
+            self.__me.gethand(self.__field.deckpop(count=5), True)
             QtTest.QTest.qWait(500)
-            self.__enemy.gethand(self.__field.deckpop(count=5))
-        QtTest.QTest.qWait(500)
-        QSound(os.path.join(soundPath, "start.wav")).play()
+            self.playsound.emit("whoop")
+            self.__enemy.gethand(self.__field.deckpop(count=5), True)
+            QtTest.QTest.qWait(500)
+        self.playsound.emit("start")
         self.__field.arrange()
         self.__me.arrange()
         self.__enemy.arrange()
         QtTest.QTest.qWait(2000)
-
-    def start(self):
         # check chongtong.
         fourcardcheck = (self.__me.haveFourCards(), self.__enemy.haveFourCards())
         if fourcardcheck[0] or fourcardcheck[1]:
             self.__me.chongtong(fourcardcheck[0], fourcardcheck[1])
             if fourcardcheck[0] and not fourcardcheck[1]:
-                return self.gameresult(winner=self.__me, special="chongtong")
+                self.gameresult(winner=self.__me, special="chongtong")
+                push = self.askpush(True)
+                if push:
+                    self.endgame.emit({"push":True, "winner":True})
+                else:
+                    self.endgame.emit({"push":False, "winner":True})
             elif not fourcardcheck[0] and fourcardcheck[1]:
-                return self.gameresult(winner=self.__enemy, special="chongtong")
+                self.gameresult(winner=self.__enemy, special="chongtong")
+                push = self.askpush(False)
+                if push:
+                    self.endgame.emit({"push":True, "winner":False})
+                else:
+                    self.endgame.emit({"push":False, "winner":False})
             else:
-                return self.gameresult(winner=None)
-        # begin
-        while True:
-            end = self.turn(self.__myturn)
-            self.__myturn = not self.__myturn
-            if end != None: # Game ends
-                break
-        if end!="draw":
-            push = self.askpush(end)
-            if push:
-                return {winner:end}
-        return end
+                self.gameresult(winner=None)
+                self.endgame.emit({"push":False, "winner":None})
+        else:
+            # begin
+            while True:
+                end = self.turn(self.__myturn)
+                self.__myturn = not self.__myturn
+                if end != None: # Game ends
+                    break
+            if end!="draw":
+                push = self.askpush(end)
+                if push:
+                    self.endgame.emit({"push":True, "winner":end})
+                else:
+                    self.endgame.emit({"push":False, "winner":end})
+            else:
+                self.endgame.emit({"push":False, "winner":None})
 
     def turn(self, myturn):
         if myturn:
-            slot = self.__me.attachEventHand()
-            return self.select(self.__me, slot)
+            self.waitforResponse = True
+            self.attacheventhand.emit(self.__me.hand, self.__field)
+            while self.waitforResponse:
+                QtTest.QTest.qWait(100)
+            return self.select(self.__me, self.answer)
         else: # computer
             return self.select(self.__enemy, random.randrange(len(self.__enemy.hand)))
 
@@ -109,12 +133,24 @@ class Game:
             QtTest.QTest.qWait(700)
         else:
             if selected.prop == "bomb":
-                player.put(slot)
+                self.removecard.emit(player.put(slot))
                 firstput = {"slot":None, "pos":None}
             else:
                 firstput = self.__field.put(player.put(slot))
+                if firstput["pos"] == 4:
+                    QtTest.QTest.qWait(500)
+                    if self.__field.current[firstput["slot"]][0].month in player.fuckmonth:
+                        player.jafuck()
+                    else:
+                        player.getfuck()
                 QtTest.QTest.qWait(700)
         secondput = self.__field.put(self.__field.deckpop())
+        if secondput["pos"] == 4 and firstput["slot"] != secondput["slot"]:
+            QtTest.QTest.qWait(300)
+            if self.__field.current[secondput["slot"]][0].month in player.fuckmonth:
+                player.jafuck()
+            else:
+                player.getfuck()
         QtTest.QTest.qWait(700)
         return self.process(player, firstput, secondput, bomb)
 
@@ -146,9 +182,6 @@ class Game:
                     rob+=1 # Get fuck
                     if self.__field.current[firstput["slot"]][0].month in player.fuckmonth: # Jafuck
                         rob += 1
-                        player.jafuck()
-                    else:
-                        player.getfuck()
                     getcards.extend(self.__field.pop(firstput["slot"]))
             elif firstput["pos"] == 3:
                 select = self.whattoget(player, self.__field.current[firstput["slot"]][0:2])
@@ -159,20 +192,17 @@ class Game:
                 rob+=1
                 if self.__field.current[secondput["slot"]][0].month in player.fuckmonth: # Jafuck
                     rob += 1
-                    player.jafuck()
-                else:
-                    player.getfuck()
                 getcards.extend(self.__field.pop(secondput["slot"]))
             elif secondput["pos"] == 3:
                 select = self.whattoget(player, self.__field.current[secondput["slot"]][0:2])
                 getcards.extend(self.__field.pop(secondput["slot"], [select, 2]))
             elif secondput["pos"] == 2:
                 getcards.extend(self.__field.pop(secondput["slot"]))
-        if player.isEnemy:
+        if player.isEnemy: 
             getcards.extend(self.__me.rob(rob))
         else:
             getcards.extend(self.__enemy.rob(rob))
-        if list(filter(lambda c:c.prop=="dual", getcards)) != []:
+        if list(filter(lambda c:c.prop=="dual", getcards)) != []: 
             dual = list(filter(lambda c:c.prop=="dual", getcards))[0]
             select = self.selectdual(player)
             if select == "animal":
@@ -180,24 +210,30 @@ class Game:
             else:
                 dual.propchange("pee")
         player.getCard(getcards)
-        if self.__field.isclear():
+        QtTest.QTest.qWait(500)
+        if self.__field.isclear() and (len(self.__me.hand) != 0 or len(self.__enemy.hand) != 0):
             self.__field.clear()
         if list(filter(lambda c:c.prop=="gwang", getcards)) != []:
-            if len(player.gwang)>=3:
-                player.gwang(len(player.gwang))
+            if len(player.gwang)==3:
+                if list(filter(lambda c:c.special=="bee", player.gwang)) == 0:
+                    player.allgwang(len(player.gwang))
+                else:
+                    player.allgwang(len(player.gwang), True)
+            elif len(player.gwang)>=4:
+                player.allgwang(len(player.gwang))
         if list(filter(lambda c:c.special=="godori", getcards)) != []:
             if player.haveAllGodori():
-                player.godori()
+                player.allgodori()
         if list(filter(lambda c:c.special=="red", getcards)) != []:
             if player.haveAllRed():
-                player.reddan()
+                player.allreddan()
         if list(filter(lambda c:c.special=="blue", getcards)) != []:
             if player.haveAllBlue():
-                player.bluedan()
+                player.allbluedan()
         if list(filter(lambda c:c.special=="cho", getcards)) != []:
             if player.haveAllCho():
-                player.chodan()
-        QtTest.QTest.qWait(1000)
+                player.allchodan()
+        QtTest.QTest.qWait(500)
         if(bomb):
             player.gethandbombs()
         if player.score_go < player.score and 7<=player.score:
@@ -206,6 +242,7 @@ class Game:
             else:
                 go = self.askgo(player)
                 if not go:
+                    player.stop()
                     return self.gameresult(winner=player)
                 else:
                     player.addgo()
@@ -221,7 +258,7 @@ class Game:
             else:
                 return self.__enemy
         if winner == None:
-            self.__me.result({"Win":None, "money":money})
+            self.__me.result({"winner":None})
             return "draw"
         else:
             messages = []
@@ -229,11 +266,11 @@ class Game:
             if special == "chongtong":
                 messages.append("총통 x4")
                 money *= 4
-                self.__me.result({"Win":not winner.isEnemy, "messages":messages, "money":money})
+                self.__me.result({"winner":not winner.isEnemy, "messages":messages, "money":money})
             elif special == "threefuck":
                 messages.append("쓰리뻑 x4")
                 money *= 4
-                self.__me.result({"Win":not winner.isEnemy, "messages":messages, "money":money})
+                self.__me.result({"winner":not winner.isEnemy, "messages":messages, "money":money})
             else:
                 if self.__draw > 0:
                     messages.append("나가리 {}번 x{}".format(self.__draw, 2**(self.__draw)))
@@ -245,7 +282,7 @@ class Game:
                     messages.append("역고 x{}".format(2**enemy(winner).gocount))
                     money *= 2**enemy(winner).gocount
                 if winner.shakecount > 0:
-                    messages.append("흔들기 {}번 x{}".format(2**winner.shakecount))
+                    messages.append("흔들기 {}번 x{}".format(winner.shakecount, 2**winner.shakecount))
                     money *= 2**winner.shakecount
                 if len(winner.animal) >= 7:
                     messages.append("멍따 x2")
@@ -254,18 +291,18 @@ class Game:
                     messages.append("광박 x2")
                     money *= 2
                 if len(winner.singlepee) + 2*len(winner.doublepee) >= 10 and \
-                len(enemy(winner).singlepee) + 2*len(enemy(winner.singlepee)) <= 7:
+                len(enemy(winner).singlepee) + 2*len(enemy(winner).singlepee) <= 7:
                     messages.append("피박 x2")
                     money *= 2
-                if len(winner.animal) >= 5 and len(enemy(winner.animal)) < 5:
+                if len(winner.animal) >= 5 and len(enemy(winner).animal) < 5:
                     messages.append("멍박 x2")
                     money *= 2
-                if len(winner.dan) >= 5 and len(enemy(winner.dan)) < 5:
+                if len(winner.dan) >= 5 and len(enemy(winner).dan) < 5:
                     messages.append("띠박 x2")
                     money *= 2
                 messages.append("총 {}점".format(winner.score))
                 money *= winner.score
-                self.__me.result({"Win":not winner.isEnemy, "messages":messages, "money":money})
+                self.__me.result({"winner":not winner.isEnemy, "messages":messages, "money":money})
             return winner == self.__me
 
     def askgo(self, player):
@@ -290,24 +327,4 @@ class Game:
         if win == False:
             return False
         else:
-            return player.askpush()
-
-def init(window, winner=None):
-    for components in window.findChildren(QPushButton): # remove Start / Exit Buttons
-        components.setParent(None)
-    if winner == None:
-        controller = Game(window, panmoney=1000)
-    else:
-        controller = Game(window, panmoney=1000, winner=winner)
-    controller.ready()
-    winner = controller.start()
-    while True:
-        if winner == True or winner == False: # ends
-            break
-        if winner == "draw": # draw
-            controller.draw()
-            winner = controller.replay(winner=None)
-        else: # push
-            controller.push()
-            winner = controller.replay(winner=winner["winner"])
-    ScreenGUI.singleGameScreen(window, winner)
+            return self.__me.askpush()

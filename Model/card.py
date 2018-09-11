@@ -5,13 +5,12 @@ imagePath = os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file_
 soundPath = os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))), "view")
 from GUI_game import CardLabel
 
-class Card(CardLabel): 
+class Card:
     prop = ("gwang", "animal", "dan", "pee", "dual", "bomb")
     special = (None, "bee", "red", "blue", "cho", "godori", "double")
     month = (1,2,3,4,5,6,7,8,9,10,11,12,13) # 13 is for bomb
 
     def __init__(self, prop, month = 13, special = None, number = 0):
-        super().__init__()
         self.__prop = prop
         self.__special = special
         self.__month = month
@@ -51,5 +50,4 @@ class Card(CardLabel):
                 return str(self.__month) + "_" + self.__prop + ".png"
     
     def flip(self):
-        self.setPixmap(QPixmap(os.path.join(os.getcwd(), "view\img_matgo\cards\\"+self.imageName)))
         self.__fliped = True

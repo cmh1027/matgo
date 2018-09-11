@@ -75,6 +75,7 @@ class Player():
         self.update()
         self._score_go = self._score
 
+
     def addfuckmonth(self, month):
         self._fuckcountmonth.append(month)
 
